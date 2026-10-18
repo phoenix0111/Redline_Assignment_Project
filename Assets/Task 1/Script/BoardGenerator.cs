@@ -19,6 +19,9 @@ public class BoardGenerator : MonoBehaviour
     [Header("Generation Settings")]
     public GridManager gridManager;
     public int capsulesPerColor = 10;
+    public int holeEmptySpace = 1;   // how many empty cells to keep around each hole
+    [Range(0f, 1f)]
+    public float emptyCellChance = 0.1f;   // chance that a cell inside a group is left empty
     public float capsuleHeight = 0.5f;
     public float holeHeight = 0.15f;
 
@@ -101,12 +104,13 @@ public class BoardGenerator : MonoBehaviour
         // Create one hole for each color.
         for (int i = 0; i < 4; i++)
         {
-            Vector2Int cell = GetRandomFreeCell();
+            Vector2Int cell = GetRandomFreeEdgeCell();
 
             if (cell.x < 0)
                 return;
 
             occupied[cell.x, cell.y] = true;
+            KeepSpaceAroundHole(cell);
             CreateHole(holePrefabs[i], colors[i], cell, holesGroup);
         }
 
@@ -123,6 +127,10 @@ public class BoardGenerator : MonoBehaviour
 
             for (int j = 0; j < cells.Count; j++)
             {
+                // Randomly leave some cells of the group empty, so groups are not solid blocks.
+                if (Random.value < emptyCellChance)
+                    continue;
+
                 CreateCapsule(
                     capsulePrefabs[i],
                     colors[i],
@@ -157,6 +165,47 @@ public class BoardGenerator : MonoBehaviour
             return new Vector2Int(-1, -1);
 
         return freeCells[Random.Range(0, freeCells.Count)];
+    }
+
+    // Same as GetRandomFreeCell, but only picks cells on the outer border of the board.
+    private Vector2Int GetRandomFreeEdgeCell()
+    {
+        List<Vector2Int> edgeCells = new List<Vector2Int>();
+
+        for (int y = 0; y < gridManager.height; y++)
+        {
+            for (int x = 0; x < gridManager.width; x++)
+            {
+                bool isOnEdge = x == 0 || y == 0 ||
+                                x == gridManager.width - 1 ||
+                                y == gridManager.height - 1;
+
+                if (isOnEdge && !occupied[x, y])
+                    edgeCells.Add(new Vector2Int(x, y));
+            }
+        }
+
+        if (edgeCells.Count == 0)
+            return new Vector2Int(-1, -1);
+
+        return edgeCells[Random.Range(0, edgeCells.Count)];
+    }
+
+    // Marks the cells around a hole as taken, so no capsule spawns there.
+    private void KeepSpaceAroundHole(Vector2Int holeCell)
+    {
+        for (int y = holeCell.y - holeEmptySpace; y <= holeCell.y + holeEmptySpace; y++)
+        {
+            for (int x = holeCell.x - holeEmptySpace; x <= holeCell.x + holeEmptySpace; x++)
+            {
+                bool isInsideBoard = x >= 0 && y >= 0 &&
+                                     x < gridManager.width &&
+                                     y < gridManager.height;
+
+                if (isInsideBoard)
+                    occupied[x, y] = true;
+            }
+        }
     }
 
     private List<Vector2Int> GetClusterCells(int count)

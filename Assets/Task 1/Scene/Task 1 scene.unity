@@ -148,10 +148,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5ad66ad7e27a35499876682a3c8cb9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridManager
-  width: 12
-  height: 12
-  cellSize: 1
+  width: 15
+  height: 27
+  cellSize: 1.2
   boardOrigin: {fileID: 1398959032}
+  moveSpeed: 7
+  enterHoleSpeed: 5
 --- !u!4 &435938697
 Transform:
   m_ObjectHideFlags: 0
@@ -349,13 +351,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 899981152}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.48160076, y: 0, z: 0, w: 0.87639076}
-  m_LocalPosition: {x: 0, y: 11.3, z: -8.8}
+  m_LocalRotation: {x: 0.38268343, y: 0, z: 0, w: 0.92387956}
+  m_LocalPosition: {x: 0, y: 22.4, z: -24.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 57.58, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 45, y: 0, z: 0}
 --- !u!1 &1398959028
 GameObject:
   m_ObjectHideFlags: 0
@@ -465,7 +467,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -0, z: 0}
-  m_LocalScale: {x: 1.4999999, y: 1.4999999, z: 1.4999999}
+  m_LocalScale: {x: 2, y: 2, z: 3.4}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -491,8 +493,10 @@ MonoBehaviour:
   yellowHolePrefab: {fileID: 3469904101666379000, guid: 49569c886ba1f7041ba6f1bd3a0a884a, type: 3}
   greenHolePrefab: {fileID: 7736644317012029309, guid: 20cd19b8ae4af354aae1a7739dac01bf, type: 3}
   gridManager: {fileID: 435938696}
-  capsulesPerColor: 10
-  capsuleHeight: 0.5
+  capsulesPerColor: 60
+  holeEmptySpace: 1
+  emptyCellChance: 0.114
+  capsuleHeight: 1
   holeHeight: 0.15
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
