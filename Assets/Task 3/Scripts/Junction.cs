@@ -4,7 +4,7 @@ public class Junction : MonoBehaviour
 {
     [Header("Switch Settings")]
     [SerializeField] private ConveyorBelt[] outputBelts;
-    [SerializeField] private GameObject[] arrows;   // one arrow per output belt, same order
+    [SerializeField] private GameObject[] arrows; 
     [SerializeField] private int startingBeltIndex = 0;
 
     private int activeIndex;

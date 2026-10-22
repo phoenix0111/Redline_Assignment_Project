@@ -65,8 +65,7 @@ public class BottleManager : MonoBehaviour
         if (fromBottle.OriginalPosition.x < toBottle.OriginalPosition.x)
             side = -1f;
 
-        Vector3 pourPosition = toBottle.OriginalPosition +
-                               new Vector3(pourOffset.x * side, pourOffset.y, 0f);
+        Vector3 pourPosition = toBottle.OriginalPosition + new Vector3(pourOffset.x * side, pourOffset.y, 0f);
 
         yield return MoveTo(fromBottle.transform, pourPosition);
         yield return RotateTo(fromBottle.transform, tiltAngle * side);

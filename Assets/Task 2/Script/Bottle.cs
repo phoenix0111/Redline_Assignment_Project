@@ -11,11 +11,9 @@ public class Bottle : MonoBehaviour
 
     [Header("Starting Liquid")]
     [SerializeField]
-    private List<LiquidColor> liquids =
-        new List<LiquidColor>();
+    private List<LiquidColor> liquids =  new List<LiquidColor>();
 
-    private readonly List<GameObject> segmentObjects =
-        new List<GameObject>();
+    private readonly List<GameObject> segmentObjects = new List<GameObject>();
 
     public int Capacity => capacity;
     public int LiquidCount => liquids.Count;

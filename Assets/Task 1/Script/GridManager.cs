@@ -55,11 +55,8 @@ public class GridManager : MonoBehaviour
         characterGrid = new Character[width, height];
         holeGrid = new Hole[width, height];
 
-        Character[] foundCharacters =
-            FindObjectsByType<Character>(FindObjectsSortMode.None);
-
-        Hole[] foundHoles =
-            FindObjectsByType<Hole>(FindObjectsSortMode.None);
+        Character[] foundCharacters =  FindObjectsByType<Character>(FindObjectsSortMode.None);
+        Hole[] foundHoles = FindObjectsByType<Hole>(FindObjectsSortMode.None);
 
         foreach (Character character in foundCharacters)
         {
@@ -196,51 +193,6 @@ public class GridManager : MonoBehaviour
         }
 
         isProcessingHole = false;
-    }
-
-    private bool HasPath(
-        Vector2Int start,
-        Vector2Int target,
-        CharacterColor movingColor)
-    {
-        Queue<Vector2Int> queue = new Queue<Vector2Int>();
-        HashSet<Vector2Int> visited = new HashSet<Vector2Int>();
-
-        queue.Enqueue(start);
-        visited.Add(start);
-
-        while (queue.Count > 0)
-        {
-            Vector2Int current = queue.Dequeue();
-
-            if (current == target)
-                return true;
-
-            foreach (Vector2Int direction in directions)
-            {
-                Vector2Int next = current + direction;
-
-                if (!IsInsideGrid(next) || visited.Contains(next))
-                    continue;
-
-                Hole hole = holeGrid[next.x, next.y];
-
-                if (hole != null && next != target)
-                    continue;
-
-                Character obstacle = characterGrid[next.x, next.y];
-
-                if (obstacle != null &&
-                    obstacle.characterColor != movingColor)
-                    continue;
-
-                visited.Add(next);
-                queue.Enqueue(next);
-            }
-        }
-
-        return false;
-
     }
 
     private List<Vector2Int> FindPath(

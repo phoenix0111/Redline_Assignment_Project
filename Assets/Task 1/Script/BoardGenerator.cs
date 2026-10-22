@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -19,9 +18,9 @@ public class BoardGenerator : MonoBehaviour
     [Header("Generation Settings")]
     public GridManager gridManager;
     public int capsulesPerColor = 10;
-    public int holeEmptySpace = 1;   // how many empty cells to keep around each hole
+    public int holeEmptySpace = 1;   
     [Range(0f, 1f)]
-    public float emptyCellChance = 0.1f;   // chance that a cell inside a group is left empty
+    public float emptyCellChance = 0.1f;   
     public float capsuleHeight = 0.5f;
     public float holeHeight = 0.15f;
 
@@ -300,21 +299,10 @@ public class BoardGenerator : MonoBehaviour
         return position;
     }
 
-    private void CreateCapsule(
-        GameObject prefab,
-        CharacterColor color,
-        Vector2Int cell,
-        Transform parent,
-        int number)
+    private void CreateCapsule( GameObject prefab,CharacterColor color,  Vector2Int cell,Transform parent, int number)
     {
-        GameObject capsule = Instantiate(
-            prefab,
-            CellToWorld(cell, capsuleHeight),
-            Quaternion.identity,
-            parent);
-
+        GameObject capsule = Instantiate(  prefab, CellToWorld(cell, capsuleHeight),Quaternion.identity,  parent);
         capsule.name = color + "Capsule_" + number.ToString("00");
-
         Character character = capsule.GetComponent<Character>();
 
         if (character == null)
@@ -330,14 +318,8 @@ public class BoardGenerator : MonoBehaviour
         Vector2Int cell,
         Transform parent)
     {
-        GameObject holeObject = Instantiate(
-            prefab,
-            CellToWorld(cell, holeHeight),
-            Quaternion.identity,
-            parent);
-
+        GameObject holeObject = Instantiate( prefab, CellToWorld(cell, holeHeight),Quaternion.identity, parent);
         holeObject.name = color + "Hole";
-
         Hole hole = holeObject.GetComponent<Hole>();
 
         if (hole == null)

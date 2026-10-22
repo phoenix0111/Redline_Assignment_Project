@@ -3,7 +3,7 @@ using UnityEngine;
 public class ItemSpawner : MonoBehaviour
 {
     [Header("Spawner Settings")]
-    [SerializeField] private ConveyorItem[] itemPrefabs;   // one prefab per color
+    [SerializeField] private ConveyorItem[] itemPrefabs;  
     [SerializeField] private ConveyorBelt startBelt;
     [SerializeField] private float spawnInterval = 1.5f;
 
