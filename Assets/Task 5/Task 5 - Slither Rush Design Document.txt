@@ -1,0 +1,224 @@
+Task 5 – How I Would Build Gecko Out
+
+Reference: https://play.google.com/store/apps/details?id=com.dalakgames.slitherrush&hl=en_IN
+
+1. What the game is
+
+Gecko Out is a timed color-matching puzzle. The board is a small grid. On it sit geckos (short snakes) of different colors and lengths, plus holes of those colors.
+You drag a gecko from its head or tail. The body follows, one cell at a time, like a worm sliding through a maze. You must send every gecko into the hole of the same color before the timer hits zero.
+
+
+2. Core loop
+
+Load level
+    then Player studies the board
+    then Drag gecko head or tail along empty cells
+    then Body follows; other geckos stay as blockers
+    then If the moving end enters a matching hole, that gecko leaves the board
+    then Repeat until all geckos are gone, then Win (coins, next level)
+    or timer hits 0 / no valid hole left, then Fail (lose 1 life)
+
+Tagline: slide colored worms into matching doors, without boxing yourself in, before time runs out.
+
+
+3. Modules I would build
+
+I would split the game into these systems. Core puzzle first, then timer / UI, then extra mechanics, then economy.
+
+1. Grid / Board — Holds walls, empty cells, holes, and who occupies each cell
+2. Gecko — One worm: color, list of cells from one end to the other
+3. Input (drag) — Pick an end, drag along the grid, reject illegal moves
+4. Movement / follow — When the grabbed end steps, the rest of the body follows
+5. Hole / exit — Matching color + gecko reaches hole, gecko leaves
+6. Level data — ScriptableObject or JSON: grid, gecko paths, holes, time
+7. Level flow — Win, fail, restart, next level
+8. Timer — Counts down; fail on 0
+9. Obstacle pack — Ice, locks, stones, stacked geckos, etc. (one small rule each)
+10. Boosters — Hammer, picker, time freeze
+11. Meta (lives, coins, ads) — Lives, shop, rewarded ads
+12. UI — HUD, win/fail popups, squash into the hole
+
+Modules 1–8 are enough for a first playable. 9–12 are the live-ops layer the store game uses.
+
+
+4. How I would approach each module
+
+4.1 Grid / Board
+
+What it stores
+A 2D array storing-
+
+- Empty
+- Wall
+- Hole (plus a color)
+- Occupied (which gecko)
+
+Approach
+
+- Board size comes from the level file.
+- Every gecko segment claims one cell. A cell can only hold one segment.
+- Before a step: ask the grid “is this next cell free, or a matching hole?”
+- After a step: clear the old tail cell, mark the new head/tail cell.
+
+Why a grid, not physics
+The game is turn-like and cell-snapped. Physics would let bodies overlap or slip off tiles. Task 3 already used points on a path for the same reason.
+
+4.2 Gecko (the worm)
+
+Data - color, cells[], isExiting
+
+Either end can be the front for a drag. If the player grabbed the tail, I treat that end as the moving end and reverse the follow order.
+
+Visual
+A chain of capsules or sprites, one per cell. Head and tail look different so the player knows where to grab. Color comes from an enum.
+
+4.3 Input (drag)
+
+1. OnMouseDown / touch on a gecko end collider.
+2. Remember which gecko and which end.
+3. Each frame, convert finger position to a grid cell.
+4. If that cell is a neighbor of the grabbed end, try one step.
+5. Repeat so a long swipe becomes several steps.
+6. OnMouseUp stops the drag. The gecko stays where it is.
+
+Illegal step (wall, other gecko, off-board, wrong-color path): ignore that step, do not cancel the whole drag.
+
+4.4 Movement / body follow
+
+When the grabbed end moves from cell A to cell B:
+
+1. Insert B at the grabbed end of cells[].
+2. Drop the cell at the other end.
+3. Length stays the same.
+4. Update the grid occupancy.
+
+That is normal Snake follow, just player-driven instead of auto-forward.
+Exit case: if B is a matching hole, do not grow into the hole. Instead play an “enter hole” animation and remove segments one by one (see 4.5).
+Straight gecko later: only allow the step if it matches a painted arrow. Same follow code, extra if.
+
+Reference: Snake movement (head steps, body copies previous cell). Official: “Straight Gecko — only move in the direction of their arrow”
+https://rollic.helpshift.com/hc/en/29-gecko-out/faq/979-obstacles-in-gecko-out/
+
+
+4.5 Hole / exit
+
+Rules for the first version
+
+- Hole has a color.
+- Grabbed end steps onto that hole.
+- Colors match: gecko starts exiting.
+- Colors do not match: step is refused.
+
+Exiting
+Play a short tween: each segment moves toward the hole and disappears. While exiting, that gecko no longer blocks (or it blocks until fully gone — I would pick “blocks until gone” first, then tune). When the last segment is gone, tell LevelFlow “one gecko cleared”.
+
+Later hole types (from the live game, add one at a time):
+
+- Frozen hole — Need N successful exits first
+- Multi-color hole — After one gecko, hole color changes
+- Permanent hole — Gecko stays visually in the hole
+- Color path — Gecko may only walk tiles of its color
+
+Reference: Official color-matching doors and Obstacles in Gecko Out
+https://rollic.helpshift.com/hc/en/29-gecko-out/faq/979-obstacles-in-gecko-out/
+
+
+4.6 Level data
+
+I would not hard-code levels in C#. Each level is a ScriptableObject (or a small JSON):
+
+levelId
+width, height
+timeLimit
+walls[]
+holes[]     { cell, color }
+geckos[]    { color, cells[] }
+later: ice, keys, stones, stacked ids
+
+A LevelLoader reads this, builds tiles, spawns gecko objects, starts the timer.
+Why: designers (or I) can add levels without touching movement code.
+Reference: Unity ScriptableObjects for level packs. Many hyper-casual puzzles keep levels as data plus a thin loader.
+
+
+4.7 Level flow (win / fail)
+
+Win: gecko count on the board hits 0, and time is still left.
+Fail: timer hits 0, or no remaining hole can accept any remaining gecko (official fail rule).
+
+LevelFlow methods:
+
+- OnGeckoExited()
+- OnTimeUp()
+- RestartLevel()
+- NextLevel()
+
+Win popup: coins, next. Fail popup: retry, spend coins / ad for extra time (meta module).
+
+Reference: How Do I Play Gecko Out? — win, fail, lives
+https://rollic.helpshift.com/hc/en/29-gecko-out/faq/960-how-do-i-play-gecko-out/
+
+
+4.8 Timer
+
+A float timeLeft. Subtract Time.deltaTime unless time-freeze booster is on. HUD text or a bar.
+Some geckos add time (Time Bonus = +20s when they exit). Bomb geckos have their own smaller timer.
+Keep the main clock in one place (Timer), and let special geckos call Timer.AddSeconds(20).
+
+Reference: Official timer fail + Time Freeze booster (10 seconds). Reviews also mention bomb gecko timers vs level timer.
+
+
+4.9 Obstacle pack
+
+I would not start with every obstacle. The live game has a long list. I would add them as small extra components on a gecko, hole, or tile.
+Order I would add them (simple to complex):
+
+1. Walls only
+2. Stacked gecko (second gecko appears after the outer one exits)
+3. Color path
+4. Frozen gecko / frozen hole (counter)
+5. Lock & key
+6. Stone / crate (counter)
+7. Multi-color hole
+8. Bomb gecko
+9. The rest (connected, scissors, dirty, mother + baby, carrier hole, and so on)
+
+Each obstacle is one extra check inside “can I step?” or “on gecko exited”. The grid and follow code stays the same.
+
+Reference: full official list — Obstacles in Gecko Out
+https://rollic.helpshift.com/hc/en/29-gecko-out/faq/979-obstacles-in-gecko-out/
+
+
+4.10 Boosters
+
+- Hammer — Pick a wall cell, set it to Empty
+- Picker — Instantly run the exit flow on one gecko
+- Time Freeze — Timer.Pause(10)
+
+Every level should still be solvable with no booster (official note). Boosters are a help layer, not the puzzle.
+
+Reference: same How-to-play page, boosters section.
+
+
+4.11 Meta: lives, coins, ads
+
+This is the store-game wrapper, not the puzzle:
+
+- 5 lives, regenerate over time
+- Fail = minus 1 life
+- Coins from wins
+- Extra time / refill lives for coins or a rewarded ad
+
+I would keep this in a PlayerSave (PlayerPrefs or a small JSON). It does not touch grid math.
+
+Reference: official lives / coins / ads rules. Reviews on the Play Store talk about extra-time purchases.
+
+
+4.12 UI and feel
+
+- Top: timer, level number, booster buttons
+- Board: top-down or slight 3D tilt 
+- Juice: gecko squash into the hole, hole flash, camera small punch on win
+- Tutorial: first 3 levels with a hand pointing at a head, then a hole
+
+
+
